@@ -5,12 +5,17 @@ from launch_ros.substitutions import FindPackageShare
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import IfCondition
+from launch.actions import DeclareLaunchArgument
 
 
 def generate_launch_description():
 
     # Launch arguments are defined within moveit_controller.launch.py
-
+    gz = DeclareLaunchArgument(
+        name="load_gazebo",
+        default_value="true",
+        description="Load Gazebo Ignition simulation environment",
+    )
     # launch rviz
     rviz_file = PathJoinSubstitution(
         [FindPackageShare("igus_rebel_moveit_config"), "rviz", "moveit.rviz"]
@@ -31,22 +36,23 @@ def generate_launch_description():
     )
 
     # include launch file from igus_rebel_gazebo
-    # ignition_launch = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         [
-    #             FindPackageShare("igus_rebel_gazebo"),
-    #             "/launch",
-    #             "/ignition.launch.py",
-    #         ]
-    #     ),
-    #     launch_arguments={
-    #         "moveit": "true",
-    #         "use_sim_time": "True",
-    #     }.items(),
-    #     condition=IfCondition(LaunchConfiguration("load_gazebo")),
-    # )
+    ignition_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [
+                FindPackageShare("igus_rebel_gazebo"),
+                "/launch",
+                "/ignition.launch.py",
+            ]
+        ),
+        launch_arguments={
+            "moveit": "true",
+            "use_sim_time": "True",
+        }.items(),
+        condition=IfCondition(LaunchConfiguration("load_gazebo")),
+    )
 
     return LaunchDescription([
-        # ignition_launch,
+        gz,
+        ignition_launch,
         igus_rebel_moveit_config_launch,
     ])
